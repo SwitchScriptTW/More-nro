@@ -34,6 +34,7 @@ def file_hash(path):
 
 def download_file(url):
     print(f"Downloading {url}")
+    time.sleep(3)
     r = requests.get(url)
     r.raise_for_status()
     return r.content
