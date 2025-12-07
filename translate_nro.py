@@ -8,6 +8,9 @@ import os
 import re
 import json
 
+DICT_FOLDER = "./dict"
+TRANS_FOLDER = "./translation"
+
 ###############################################
 # 工具區
 ###############################################
@@ -61,7 +64,7 @@ def load_translation_file(path):
     return trans
 
 
-def apply_translation(nro_path, translations, out_path):
+def apply_translation(nro_path, translations):
     """將翻譯套用到 NRO，支援長度超過截斷或推移"""
     with open(nro_path, "rb") as f:
         data = bytearray(f.read())
@@ -90,7 +93,8 @@ def apply_translation(nro_path, translations, out_path):
         # 如果 new_bytes 長度超過原本
         if len(new_bytes) > len(old_bytes):
             print(f"\n⚠️ 長度超過原文（原:{len(old_bytes)} / 新:{len(new_bytes)}），offset {offset}")
-            choice = input("是否截斷寫入？(Y=截斷, N=推移資料) [預設 Y]: ").strip().lower()
+            # choice = input("是否截斷寫入？(Y=截斷, N=推移資料) [預設 Y]: ").strip().lower()
+            choice = "y"  # 預設截斷寫入
 
             if choice == "" or choice == "y":
                 # 截斷寫入
@@ -110,7 +114,8 @@ def apply_translation(nro_path, translations, out_path):
             new_bytes += b"\x00" * (len(old_bytes) - len(new_bytes))
         data[offset:offset + len(new_bytes)] = new_bytes
 
-    with open(out_path, "wb") as f:
+    # 直接覆蓋原檔
+    with open(nro_path, "wb") as f:
         f.write(data)
 
 
@@ -137,11 +142,11 @@ def save_dict(dict_path, new_pairs):
 # 主流程
 ###############################################
 
-def main():
+def main(nro_path):
     script_folder = os.path.dirname(os.path.abspath(__file__))  # A 資料夾
 
-    print("請將 NRO / OVL 檔案拖曳到此視窗，按 Enter:")
-    nro_path = input().strip('"').strip()
+    # print("請將 NRO / OVL 檔案拖曳到此視窗，按 Enter:")
+    # nro_path = input().strip('"').strip()
 
     if not os.path.isfile(nro_path):
         print("❌ 檔案不存在！")
@@ -154,26 +159,28 @@ def main():
 
     nro_folder = os.path.dirname(os.path.abspath(nro_path))     # B 資料夾
     base = os.path.splitext(os.path.basename(nro_path))[0]
-    translation_txt = os.path.join(nro_folder, f"{base}_translation.txt")
-    dict_path = os.path.join(script_folder, f"{base}_dict.json")
+    os.makedirs(TRANS_FOLDER, exist_ok=True)
+    translation_txt = os.path.join(TRANS_FOLDER, f"{base}.txt")
+    os.makedirs(DICT_FOLDER, exist_ok=True)
+    dict_path = os.path.join(DICT_FOLDER, f"{base}.json")
 
     print("🔍 正在讀取字串...")
     strings = extract_strings(nro_path)
 
     ###############################################
-    # 若字典存在 → 問要不要自動套用
+    # 若字典存在 → 自動套用
     ###############################################
     dict_data = load_dict(dict_path)
     use_dict = False
 
     if dict_data:
-        print(f"偵測到字典 {base}_dict.json")
-        print("是否使用字典自動替換？(Y/N)：")
-        ans = input().strip().lower()
-        use_dict = (ans == "y")
+        print(f"偵測到字典 {base}.json")
+        # print("是否使用字典自動替換？(Y/N)：")
+        # ans = input().strip().lower()
+        use_dict = bool(dict_data)
 
     ###############################################
-    # 產生 translation.txt（必做）
+    # 產生 translation.txt
     ###############################################
     merged_strings = strings.copy()
 
@@ -184,13 +191,11 @@ def main():
                 merged_strings[off] = dict_data[text]
 
     save_translation_file(merged_strings, translation_txt)
-    print(f"📄 已生成 {translation_txt}")
-    print("⚠️ 請修改後拖回來，按 Enter:")
 
     ###############################################
-    # 等待使用者匯入翻譯後的 txt
+    # 自動匯入翻譯後的 txt
     ###############################################
-    input_txt = input().strip('"').strip()
+    input_txt = translation_txt
     if not os.path.isfile(input_txt):
         print("❌ 翻譯文件不存在！")
         return
@@ -230,33 +235,17 @@ def main():
     ###############################################
     if dict_add:
         print(f"📘 準備更新字典: {dict_path}（新增/修改 {len(dict_add)} 筆）")
-        ans = input("是否儲存更新到字典？(Y/N) [預設 Y]: ").strip().lower()
-        if ans == "" or ans == "y":
-            save_dict(dict_path, dict_add)
-            print(f"✅ 已更新字典: {dict_path}")
-        else:
-            print("ℹ️ 已取消更新字典")
+        save_dict(dict_path, dict_add)
+        print(f"✅ 已更新字典: {dict_path}")
     else:
         print("ℹ️ 使用者無修改 → 不更新字典")
 
     ###############################################
     # 輸出 translated.nro
     ###############################################
-    out_file = os.path.join(nro_folder, f"{base}_translated{ext}")
-    apply_translation(nro_path, final_apply, out_file)
-    print(f"✅ 已生成 {out_file}")
-
-    ###############################################
-    # 刪除 translation.txt
-    ###############################################
-    try:
-        os.remove(translation_txt)
-        print(f"🗑️ 已刪除 {translation_txt}")
-    except:
-        pass
-
-    print("🎉 完成！")
-
+    apply_translation(nro_path, final_apply)
+    print(f"✅ 已生成")
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(sys.argv[1])

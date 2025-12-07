@@ -27,7 +27,24 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-          git add Hans/**/* Hant/**/*
+          git add Hans/**/* Hant/**/* translation/**/* dict/**/*
           git add dict_string.json dict_url.json
           git commit -m "繁化更新" || echo "No changes to commit"
           git push
+      - name: Create/Update Release and Upload Assets
+        uses: marvinp/release-asset-update-action@v5.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # 1. 如果這個 Tag (latest-plugins) 存在，則使用它並覆蓋 Asset
+          # 2. 如果這個 Tag 不存在，則自動建立一個新的 Release
+          tag: latest-plugins
+          # Release 的標題，只在第一次建立 Release 時使用
+          name: 🛠️ 繁體化外掛最新版 (自動更新)
+          # Release 的描述，只在第一次建立 Release 時使用
+          body: |
+            此 Release 會自動覆蓋更新，始終提供最新的繁體化外掛 ZIP 檔案。
+          # 設定為 true 以確保如果 Release 已經存在，我們可以覆蓋 Assets
+          overwrite: true
+          # 這裡指定要上傳的檔案路徑，它會找到所有 releases 資料夾下的 ZIP 檔案
+          files: releases/**/*.zip

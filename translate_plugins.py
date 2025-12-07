@@ -7,6 +7,8 @@ import requests
 import zipfile
 import io
 import hashlib
+import subprocess
+import shutil
 
 # ----------------------------
 # 配置
@@ -17,6 +19,7 @@ REMOTE_DICT_U_URL = "https://raw.githubusercontent.com/SwitchScriptTW/More/refs/
 TEMP_DIR = "./temp"           # 臨時下載與解壓
 OUTPUT_DIR_HANS = "./Hans"    # 原始簡體 ZIP
 OUTPUT_DIR_HANT = "./Hant"    # 繁體 ZIP
+RELEASES_DIR = "./releases"      # 翻譯後 ZIP 檔案 (用於 Releases)
 
 DICT_STRING_FILE = "./dict_string.json"
 DICT_URL_FILE = "./dict_url.json"
@@ -118,6 +121,7 @@ def main():
     ensure_dir(TEMP_DIR)
     ensure_dir(OUTPUT_DIR_HANS)
     ensure_dir(OUTPUT_DIR_HANT)
+    ensure_dir(RELEASES_DIR)
 
     dict_string = load_json(DICT_STRING_FILE)
     dict_url = load_json(DICT_URL_FILE)
@@ -137,8 +141,8 @@ def main():
     # ----------------------------
     url_set = set()
     for k in dict_url.keys():
-    if k.startswith("https://dl.awa.cool/hahappify/nro/"):
-        url_set.add(k)
+        if k.startswith("https://dl.awa.cool/hahappify/nro/"):
+            url_set.add(k)
 
     # ----------------------------
     # 下載所有 URL 並繁化
@@ -185,12 +189,28 @@ def main():
             with open(local_path_hans, "rb") as f:
                 content = f.read()
 
-        # 解壓 ZIP
-        temp_dir = os.path.join(TEMP_DIR, hashlib.md5(url.encode()).hexdigest())
-        extract_zip(content, temp_dir)
+        # 取得 ZIP 檔案名稱 (例如 DBI.zip)
+        zip_filename = os.path.basename(local_path_hans) 
+        # 設定 temp 資料夾路徑：
+        # 這裡我們先解壓到一個臨時目錄，然後再移動到您指定的結構。
+        temp_extract_dir = os.path.join(TEMP_DIR, zip_filename + "_extract") # 使用一個臨時解壓目錄
+        extract_zip(content, temp_extract_dir)
+
+        # 根據您的新結構，定義最終的 temp 路徑
+        # url_path: hahappify/nro/DBI.zip
+        final_temp_path = os.path.join(TEMP_DIR, url_path + "/")
+        
+        # 將解壓內容移動到 final_temp_path
+        # 假設 ZIP 內容沒有頂層資料夾
+        if os.path.exists(final_temp_path):
+            shutil.rmtree(final_temp_path)
+        shutil.move(temp_extract_dir, final_temp_path) # 將解壓內容移至新結構路徑
+        
+        # 設定後續處理的目錄為 final_temp_path
+        temp_dir_for_processing = final_temp_path
 
         # 處理每個文字檔
-        for root, _, files in os.walk(temp_dir):
+        for root, _, files in os.walk(temp_dir_for_processing):
             for f in files:
                 path = os.path.join(root, f)
                 try:
@@ -222,16 +242,46 @@ def main():
                 except:
                     continue
 
+        # ----------------------------
+        # 自動翻譯 *.nro / *.ovl
+        # ----------------------------
+        for root, _, files in os.walk(temp_dir_for_processing):
+            for f in files:
+                path = os.path.join(root, f)
+                if path.lower().endswith((".nro", ".ovl")):
+                    print(f"🔄 Translating {f} ...")
+                    subprocess.run([
+                        "python", "translate_nro.py", path
+                    ], check=True)
+
         # 保存 dict_url.json
         if url not in dict_url:
             dict_url[url] = url
         save_json(DICT_STRING_FILE, dict_string)
         save_json(DICT_URL_FILE, dict_url)
 
-        # 壓縮回 ZIP (繁體)
-        zip_output_path_hant = os.path.join(OUTPUT_DIR_HANT, url_path)
-        zip_dir(temp_dir, zip_output_path_hant)
-        print(f"Saved translated ZIP: {zip_output_path_hant}")
+        # ----------------------------
+        # 將處理後的檔案從 Temp 複製/移動到 Hant
+        # ----------------------------
+        hant_folder_path = os.path.join(OUTPUT_DIR_HANT, url_path + "/") # ./Hant/hahappify/nro/DBI.zip/
+        ensure_dir(os.path.dirname(hant_folder_path))
+        if os.path.exists(hant_folder_path):
+            shutil.rmtree(hant_folder_path) # 先刪除舊的 Hant 資料夾
+        shutil.copytree(temp_dir_for_processing, hant_folder_path) # 複製到 Hant
+        print(f"✅ Copied translated files to Hant folder: {hant_folder_path}")
+
+        # ----------------------------
+        # 壓縮回 ZIP (Releases)
+        # ----------------------------
+        # zip_dir(folder_path, zip_path)
+        release_zip_path = os.path.join(RELEASES_DIR, url_path) # ./releases/hahappify/nro/DBI.zip
+        zip_dir(temp_dir_for_processing, release_zip_path) # <--- 從處理後的 temp 資料夾壓縮
+        print(f"📦 Saved translated ZIP for Releases: {release_zip_path}")
+
+        # ----------------------------
+        # 清理臨時資料夾
+        # ----------------------------
+        shutil.rmtree(temp_dir_for_processing)
 
 if __name__ == "__main__":
     main()
