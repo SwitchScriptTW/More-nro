@@ -12,6 +12,8 @@ import hashlib
 # 配置
 # ----------------------------
 MAIN_ZIP_URL = "https://dl.awa.cool/hahappify/xlcj/qun.zip"
+REMOTE_DICT_U_URL = "https://raw.githubusercontent.com/SwitchScriptTW/More/refs/heads/main/dict_url.json"
+# REMOTE_DICT_S_URL = "https://raw.githubusercontent.com/SwitchScriptTW/More/refs/heads/main/dict_string.json"
 TEMP_DIR = "./temp"           # 臨時下載與解壓
 OUTPUT_DIR_HANS = "./Hans"    # 原始簡體 ZIP
 OUTPUT_DIR_HANT = "./Hant"    # 繁體 ZIP
@@ -119,32 +121,24 @@ def main():
 
     dict_string = load_json(DICT_STRING_FILE)
     dict_url = load_json(DICT_URL_FILE)
-
-    # ----------------------------
-    # 下載主 qun.zip
-    # ----------------------------
-    main_zip_content = download_file(MAIN_ZIP_URL)
-    temp_main_dir = os.path.join(TEMP_DIR, "qun")
-    extract_zip(main_zip_content, temp_main_dir)
+    # 從 GitHub 取得最新 dict_url.json
+    try:
+        print("Fetching remote dict_url.json ...")
+        r = requests.get(REMOTE_DICT_U_URL, timeout=10)
+        r.raise_for_status()
+        dict_url_remote = r.json()
+        dict_url.update(dict_url_remote)   # 用遠端更新本地 dict_url
+        print("Loaded remote dict_url.json")
+    except Exception as e:
+        print(f"Failed to fetch remote dict_url.json: {e}")
 
     # ----------------------------
     # 找出內部 URL
     # ----------------------------
     url_set = set()
-    url_pattern = re.compile(r"https://dl\.awa\.cool/[^\s\"']+")
-    for root, _, files in os.walk(temp_main_dir):
-        for f in files:
-            path = os.path.join(root, f)
-            try:
-                with open(path, "r", encoding="utf8") as file:
-                    content = file.read()
-                for match in url_pattern.findall(content):
-                    if match != "https://dl.awa.cool/" and match.startswith("https://dl.awa.cool/hahappify/nro/"):
-                        url_set.add(match)
-                        if url not in dict_url:
-                            dict_url[url] = url
-            except:
-                continue
+    for k in dict_url.keys():
+    if k.startswith("https://dl.awa.cool/hahappify/nro/"):
+        url_set.add(k)
 
     # ----------------------------
     # 下載所有 URL 並繁化
