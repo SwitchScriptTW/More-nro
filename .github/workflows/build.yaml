@@ -39,5 +39,5 @@ jobs:
           name: 🛠️ 繁體化外掛最新版 (自動更新)
           body: 此 Release 會自動覆蓋更新，始終提供最新的繁體化外掛 ZIP 檔案。
           allowUpdates: true
-          overwrite: true
+          replacesArtifacts: true
           artifacts: releases/**/*.zip
