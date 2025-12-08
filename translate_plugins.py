@@ -39,7 +39,7 @@ def file_hash(path):
 
 def download_file(url):
     print(f"Downloading {url}")
-    time.sleep(10)
+    time.sleep(30)
     r = requests.get(url)
     r.raise_for_status()
     return r.content
@@ -191,13 +191,13 @@ def main():
 
         need_download = False
         # try:
-        #     head_resp = requests.head(url, timeout=10)
+        #     head_resp = requests.head(url, timeout=15)
         #     etag_remote = head_resp.headers.get("ETag")
         #     if etag_remote:
         #         etag_remote = etag_remote.strip('"')  # 去掉雙引號
         #         if etag_remote == etag_local:
         #             print("無更新，跳過下載")
-        #             time.sleep(10) # 避免過快重複請求
+        #             time.sleep(30) # 避免過快重複請求
         #             need_download = False
         # except Exception as e:
         #     print(f"HEAD request failed: {e}, will download")
