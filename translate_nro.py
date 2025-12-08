@@ -164,7 +164,7 @@ def main(nro_path):
     os.makedirs(DICT_FOLDER, exist_ok=True)
     dict_path = os.path.join(DICT_FOLDER, f"{base}.json")
 
-    print("🔍 正在讀取字串...")
+    # print("🔍 正在讀取字串...")
     strings = extract_strings(nro_path)
 
     ###############################################
@@ -174,7 +174,7 @@ def main(nro_path):
     use_dict = False
 
     if dict_data:
-        print(f"偵測到字典 {base}.json")
+        # print(f"偵測到字典 {base}.json")
         # print("是否使用字典自動替換？(Y/N)：")
         # ans = input().strip().lower()
         use_dict = bool(dict_data)
@@ -244,7 +244,7 @@ def main(nro_path):
     # 輸出 translated.nro
     ###############################################
     apply_translation(nro_path, final_apply)
-    print(f"✅ 已生成")
+    # print(f"✅ 已生成")
 
 if __name__ == "__main__":
     import sys
