@@ -1,0 +1,19 @@
+{
+  "        \"pair_postfix\": \" on your host device\",": "        \"pair_postfix\": \" \",",
+  "        \"no_ip\": \"無法獲取IP位址\"": "        \"no_ip\": \"無法取得IP位址\"",
+  "        \"applet_not_supported\": \"Applet Mode is unsupported\\n\\nPlease, launch this app using Title Redirection (By default it's hold  and start any game)\",": "        \"applet_not_supported\": \"不支援小程式模式\\n\\n(請長按  同時打開任意遊戲啟動)\",",
+  "        \"ip_not_obtained\": \"無法獲取IP位址……\",": "        \"ip_not_obtained\": \"無法取得IP位址……\",",
+  "            \"home\": \"Home\",": "            \"home\": \"首頁\",",
+  "            \"screenshot\": \"Screenshot\"": "            \"screenshot\": \"螢幕截圖\"",
+  "            \"input_hint\": \"Dead zone value in percent\",": "            \"input_hint\": \"死區百分比\",",
+  "            \"stick_left\": \"Left stick\",": "            \"stick_left\": \"左手柄\",",
+  "            \"stick_right\": \"Right stick\",": "            \"stick_right\": \"右手柄\",",
+  "            \"title\": \"Dead zones\"": "            \"title\": \"死區\"",
+  "        \"keyboard_fingers\": \"Taps to open keyboard\",": "        \"keyboard_fingers\": \"輕觸打開鍵盤\",",
+  "        \"quality\": \"串流質量 (更高的質量需要CPU超頻)\",": "        \"quality\": \"串流品質 (更高的品質需要CPU超頻)\",",
+  "        \"request_hdr\": \"Request HDR Video\",": "        \"request_hdr\": \"請求 HDR 影片\",",
+  "        \"system_button_duplication_error\": \"Another action already use this system button.\",": "        \"system_button_duplication_error\": \"其他動作已使用此系統按鍵。\",",
+  "        \"touchscreen_mouse_mode\": \"觸摸屏模式\",": "\"touchscreen_mouse_mode\": \"觸控螢幕模式\",",
+  "        \"use_system_button\": \"Use system button\",": "        \"use_system_button\": \"使用系統按鈕\",",
+  "        \"add_host\": \"添加主機\",": "        \"add_host\": \"新增主機\","
+}
