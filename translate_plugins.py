@@ -122,6 +122,8 @@ def main():
     ensure_dir(OUTPUT_DIR_HANS)
     ensure_dir(OUTPUT_DIR_HANT)
     ensure_dir(RELEASES_DIR)
+    ensure_dir("./translation")
+    ensure_dir("./dict)
 
     dict_string = load_json(DICT_STRING_FILE)
     dict_url = load_json(DICT_URL_FILE)
