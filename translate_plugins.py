@@ -18,7 +18,7 @@ REMOTE_DICT_U_URL = "https://raw.githubusercontent.com/SwitchScriptTW/More/refs/
 # REMOTE_DICT_S_URL = "https://raw.githubusercontent.com/SwitchScriptTW/More/refs/heads/main/dict_string.json"
 TEMP_DIR = "./temp"           # 臨時下載與解壓
 OUTPUT_DIR_HANS = "./Hans"    # 原始簡體 ZIP
-OUTPUT_DIR_HANT = "./Hant"    # 繁體 ZIP
+# OUTPUT_DIR_HANT = "./Hant"    # 繁體 ZIP
 RELEASES_DIR = "./releases"      # 翻譯後 ZIP 檔案 (用於 Releases)
 
 DICT_STRING_FILE = "./dict_string.json"
@@ -39,7 +39,7 @@ def file_hash(path):
 
 def download_file(url):
     print(f"Downloading {url}")
-    time.sleep(3)
+    time.sleep(10)
     r = requests.get(url)
     r.raise_for_status()
     return r.content
@@ -120,10 +120,10 @@ def save_etag(path, etag):
 def main():
     ensure_dir(TEMP_DIR)
     ensure_dir(OUTPUT_DIR_HANS)
-    ensure_dir(OUTPUT_DIR_HANT)
+    # ensure_dir(OUTPUT_DIR_HANT)
     ensure_dir(RELEASES_DIR)
     ensure_dir("./translation")
-    ensure_dir("./dict)
+    ensure_dir("./dict")
 
     dict_string = load_json(DICT_STRING_FILE)
     dict_url = load_json(DICT_URL_FILE)
@@ -138,19 +138,46 @@ def main():
     except Exception as e:
         print(f"Failed to fetch remote dict_url.json: {e}")
 
+    black_url = []
+    black_zip = [
+        "emuiibo.zip", # 已有繁體
+        "ftpsrv.zip", # 無簡體翻譯
+        "KeyX.zip", # 已有繁體
+        "dvr-patches.zip", # 不需要翻譯
+        "DBI.zip", # 不使用，改用 ssky 的版本
+        "Breeze.zip", # 無簡體翻譯
+        "AtmoXL-Titel-Installer.zip", # 已有繁體
+        "BBI.zip", # 無簡體翻譯
+
+        "wiliwili.zip", # 已有繁體
+        "Goldleaf.zip", # 已有繁體
+        "aio-switch-updater.zip", # 已有繁體
+        "battery_desync_fix.zip", # 無簡體翻譯
+        "SwitchThemesNX.zip", # 不處理，字體問題
+        "PPSSPP.zip", # 已有繁體
+
+        "NX-Activity-Log.zip", # 已有繁體，但需要修正
+        "NX-Mod-Manager.zip",  # 已有繁體，但需要修正
+    ]
+    balck_file = [
+        "Fizeau.nro",
+        "DClight.ovl",
+        "SysDVR.nro",
+    ]
+
     # ----------------------------
     # 找出內部 URL
     # ----------------------------
     url_set = set()
     for k in dict_url.keys():
-        if k.startswith("https://dl.awa.cool/hahappify/nro/"):
+        if k.startswith("https://dl.awa.cool/hahappify/nro/") and k not in black_url:
             url_set.add(k)
 
     # ----------------------------
     # 下載所有 URL 並繁化
     # ----------------------------
     for url in url_set:
-        print(f"\nProcessing URL: {url}")
+        print(f"\n讀取網址: {url}")
         url_path = url.replace("https://dl.awa.cool/", "")
         local_path_hans = os.path.join(OUTPUT_DIR_HANS, url_path)
         ensure_dir(os.path.dirname(local_path_hans))
@@ -162,16 +189,18 @@ def main():
         need_download = True
         etag_remote = None
 
-        try:
-            head_resp = requests.head(url, timeout=10)
-            etag_remote = head_resp.headers.get("ETag")
-            if etag_remote:
-                etag_remote = etag_remote.strip('"')  # 去掉雙引號
-                if etag_remote == etag_local:
-                    print("No update, skipping download")
-                    need_download = False
-        except Exception as e:
-            print(f"HEAD request failed: {e}, will download")
+        need_download = False
+        # try:
+        #     head_resp = requests.head(url, timeout=10)
+        #     etag_remote = head_resp.headers.get("ETag")
+        #     if etag_remote:
+        #         etag_remote = etag_remote.strip('"')  # 去掉雙引號
+        #         if etag_remote == etag_local:
+        #             print("無更新，跳過下載")
+        #             time.sleep(10) # 避免過快重複請求
+        #             need_download = False
+        # except Exception as e:
+        #     print(f"HEAD request failed: {e}, will download")
         
         # 下載 ZIP
         if need_download:
@@ -193,6 +222,16 @@ def main():
 
         # 取得 ZIP 檔案名稱 (例如 DBI.zip)
         zip_filename = os.path.basename(local_path_hans) 
+
+        # 排除不需處理的 zip
+        if zip_filename in black_zip:
+            # zip 複製到 releases
+            release_zip_path = os.path.join(RELEASES_DIR, url_path) # ./releases/hahappify/nro/DBI.zip
+            ensure_dir(os.path.dirname(release_zip_path))
+            shutil.copy2(local_path_hans, release_zip_path)
+            print(f"✅ 儲存到 {release_zip_path}")
+            continue
+
         # 設定 temp 資料夾路徑：
         # 這裡我們先解壓到一個臨時目錄，然後再移動到您指定的結構。
         temp_extract_dir = os.path.join(TEMP_DIR, zip_filename + "_extract") # 使用一個臨時解壓目錄
@@ -215,6 +254,8 @@ def main():
         for root, _, files in os.walk(temp_dir_for_processing):
             for f in files:
                 path = os.path.join(root, f)
+                if f.lower() == "zh-hans.json":
+                    continue  # 跳過簡體字典檔
                 try:
                     with open(path, "r", encoding="utf8") as file:
                         lines = file.readlines()
@@ -250,8 +291,8 @@ def main():
         for root, _, files in os.walk(temp_dir_for_processing):
             for f in files:
                 path = os.path.join(root, f)
-                if path.lower().endswith((".nro", ".ovl")):
-                    print(f"🔄 Translating {f} ...")
+                if path.lower().endswith((".nro", ".ovl")) and f not in balck_file:
+                    print(f"🔄 正在翻譯 {f} ...")
                     subprocess.run([
                         "python", "translate_nro.py", path
                     ], check=True)
@@ -265,12 +306,12 @@ def main():
         # ----------------------------
         # 將處理後的檔案從 Temp 複製/移動到 Hant
         # ----------------------------
-        hant_folder_path = os.path.join(OUTPUT_DIR_HANT, url_path + "/") # ./Hant/hahappify/nro/DBI.zip/
-        ensure_dir(os.path.dirname(hant_folder_path))
-        if os.path.exists(hant_folder_path):
-            shutil.rmtree(hant_folder_path) # 先刪除舊的 Hant 資料夾
-        shutil.copytree(temp_dir_for_processing, hant_folder_path) # 複製到 Hant
-        print(f"✅ Copied translated files to Hant folder: {hant_folder_path}")
+        # hant_folder_path = os.path.join(OUTPUT_DIR_HANT, url_path + "/") # ./Hant/hahappify/nro/DBI.zip/
+        # ensure_dir(os.path.dirname(hant_folder_path))
+        # if os.path.exists(hant_folder_path):
+        #     shutil.rmtree(hant_folder_path) # 先刪除舊的 Hant 資料夾
+        # shutil.copytree(temp_dir_for_processing, hant_folder_path) # 複製到 Hant
+        # print(f"✅ Copied translated files to Hant folder: {hant_folder_path}")
 
         # ----------------------------
         # 壓縮回 ZIP (Releases)
@@ -278,7 +319,7 @@ def main():
         # zip_dir(folder_path, zip_path)
         release_zip_path = os.path.join(RELEASES_DIR, url_path) # ./releases/hahappify/nro/DBI.zip
         zip_dir(temp_dir_for_processing, release_zip_path) # <--- 從處理後的 temp 資料夾壓縮
-        print(f"📦 Saved translated ZIP for Releases: {release_zip_path}")
+        print(f"📦 儲存到 {release_zip_path}")
 
         # ----------------------------
         # 清理臨時資料夾
