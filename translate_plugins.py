@@ -156,6 +156,8 @@ def main():
         "SwitchThemesNX.zip", # 不處理，字體問題
         "PPSSPP.zip", # 已有繁體
         "ppsspp.zip", # 已有繁體
+        "Awoo-Installer.zip", # 已有繁體
+        "Switchfin.zip", # 已有繁體
 
         "NX-Activity-Log.zip", # 已有繁體，但需要修正
         "NX-Mod-Manager.zip",  # 已有繁體，但需要修正
