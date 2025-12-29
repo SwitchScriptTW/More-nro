@@ -72,5 +72,7 @@
   "    \"HueFizeauOverlayGuiCategoryHeaderText\": \"色調：%.2f\",\n": "    \"HueFizeauOverlayGuiCategoryHeaderText\": \"色調：%.2f\",\n",
   "    \"ContrastFizeauOverlayGuiCategoryHeaderText\": \"對比度：%.2f\",\n": "    \"ContrastFizeauOverlayGuiCategoryHeaderText\": \"對比度：%.2f\",\n",
   "    \"GammaFizeauOverlayGuiCategoryHeaderText\": \"伽瑪：%.2f\",\n": "    \"GammaFizeauOverlayGuiCategoryHeaderText\": \"伽瑪：%.2f\",\n",
-  "    \"LuminanceFizeauOverlayGuiCategoryHeaderText\": \"亮度：%.2f\"\n": "    \"LuminanceFizeauOverlayGuiCategoryHeaderText\": \"亮度：%.2f\"\n"
+  "    \"LuminanceFizeauOverlayGuiCategoryHeaderText\": \"亮度：%.2f\"\n": "    \"LuminanceFizeauOverlayGuiCategoryHeaderText\": \"亮度：%.2f\"\n",
+  "    \"name\"  : \"签名补丁\",\n": "    \"name\"  : \"簽名補丁\",\n",
+  "    \"name\"  : \"后台音乐\",\n": "    \"name\"  : \"後台音樂\",\n"
 }
