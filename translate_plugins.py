@@ -155,6 +155,7 @@ def main():
         "battery_desync_fix.zip", # 無簡體翻譯
         "SwitchThemesNX.zip", # 不處理，字體問題
         "PPSSPP.zip", # 已有繁體
+        "ppsspp.zip", # 已有繁體
 
         "NX-Activity-Log.zip", # 已有繁體，但需要修正
         "NX-Mod-Manager.zip",  # 已有繁體，但需要修正
